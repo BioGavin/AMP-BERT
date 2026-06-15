@@ -63,8 +63,8 @@ Reproduce AMP-BERT exactly as published: fine-tune on the Veltri training set, t
 
 | step | notebook | Colab |
 |------|----------|-------|
-| **Train** | [`notebooks/01_train_amp_bert.ipynb`](notebooks/01_train_amp_bert.ipynb) | <!-- COLAB_LINK_01 --> _(link coming soon)_ |
-| **Test**  | [`notebooks/02_test_reproduce.ipynb`](notebooks/02_test_reproduce.ipynb) | <!-- COLAB_LINK_02 --> _(link coming soon)_ |
+| **Train** | [`notebooks/01_train_amp_bert.ipynb`](notebooks/01_train_amp_bert.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/BioGavin/AMP-BERT/blob/main/notebooks/01_train_amp_bert.ipynb) |
+| **Test**  | [`notebooks/02_test_reproduce.ipynb`](notebooks/02_test_reproduce.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/BioGavin/AMP-BERT/blob/main/notebooks/02_test_reproduce.ipynb) |
 
 **What happens**
 1. `01` fine-tunes ProtBERT-BFD (15 epochs, effective batch size 64) and saves the model to `models/amp_bert/`.
@@ -78,8 +78,8 @@ Train and evaluate AMP-BERT on the **ESCAPE benchmark** using the same pipeline.
 
 | step | notebook | Colab |
 |------|----------|-------|
-| **Train** | [`notebooks/03_escape_train.ipynb`](notebooks/03_escape_train.ipynb) | <!-- COLAB_LINK_03 --> _(link coming soon)_ |
-| **Test**  | [`notebooks/04_escape_test.ipynb`](notebooks/04_escape_test.ipynb) | <!-- COLAB_LINK_04 --> _(link coming soon)_ |
+| **Train** | [`notebooks/03_escape_train.ipynb`](notebooks/03_escape_train.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/BioGavin/AMP-BERT/blob/main/notebooks/03_escape_train.ipynb) |
+| **Test**  | [`notebooks/04_escape_test.ipynb`](notebooks/04_escape_test.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/BioGavin/AMP-BERT/blob/main/notebooks/04_escape_test.ipynb) |
 
 **Setup:** place the ESCAPE splits (`escape_train.csv`, `escape_test.csv`, schema `aa_seq, aa_len, AMP`) under `data/raw/escape/`, then run `03` → `04`. `03` saves the model to `models/amp_bert_escape/`; `04` evaluates it and writes
 `results/escape_test_predictions.csv`.
