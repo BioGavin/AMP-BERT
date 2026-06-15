@@ -27,10 +27,8 @@ AMP-BERT/
 │   ├── metrics.py         # accuracy / F1 / precision / recall / MCC / AUC
 │   └── model.py           # model_init + build_training_args
 ├── notebooks/
-│   ├── 01_train_amp_bert.ipynb   # Part 2 — train
-│   ├── 02_test_reproduce.ipynb   # Part 2 — test
-│   ├── 03_escape_train.ipynb     # Part 3 — train
-│   ├── 04_escape_test.ipynb      # Part 3 — test
+│   ├── 01_reproduce_amp_bert.ipynb  # Part 2 — train + test (one notebook)
+│   ├── 02_escape_benchmark.ipynb    # Part 3 — train + test (one notebook)
 │   └── _legacy_fine-tune_with_amps.ipynb  # original notebook, kept for reference
 ├── data/raw/              # datasets (see data/README.md)
 ├── config/default.yaml    # experiment hyper-parameters
@@ -41,8 +39,10 @@ AMP-BERT/
 ### Setup
 **Colab (recommended):** the notebooks are **self-contained** — open one via its
 Colab badge below and run top to bottom. The first cell installs a pinned
-`transformers`, all logic is inlined, every tunable parameter sits in a **Config**
-cell, and datasets are read straight from this repo's raw URLs. No cloning, no
+`transformers`, the logic is inlined step by step, parameters sit next to the
+step that uses them, and datasets are read straight from this repo's raw URLs.
+Each notebook covers **both train and test**, saving/loading the model via Google
+Drive so you can retrain once and re-test in any later session. No cloning, no
 `git pull`, no restart cycle.
 
 **Local / scripting:** the same logic is packaged under `src/amp_bert/` for `import`
@@ -65,27 +65,23 @@ All CSVs share the schema `aa_seq, aa_len, AMP`. See [data/README.md](data/READM
 
 ## Part 2 · Reproduce the original paper (train + test)
 
-Reproduce AMP-BERT exactly as published: fine-tune on the Veltri training set, then evaluate on the external test set (DRAMP AMPs ∪ AMPEP non-AMPs).
+Reproduce AMP-BERT exactly as published: fine-tune on the Veltri training set, then evaluate on the external test set (DRAMP AMPs ∪ AMPEP non-AMPs). Part A trains and saves AMP-BERT to Drive; Part B loads it and evaluates.
 
-| step | notebook | Colab |
-|------|----------|-------|
-| **Train** | [`notebooks/01_train_amp_bert.ipynb`](notebooks/01_train_amp_bert.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/BioGavin/AMP-BERT/blob/main/notebooks/01_train_amp_bert.ipynb) |
-| **Test**  | [`notebooks/02_test_reproduce.ipynb`](notebooks/02_test_reproduce.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/BioGavin/AMP-BERT/blob/main/notebooks/02_test_reproduce.ipynb) |
+| notebook | Colab |
+|----------|-------|
+| [`notebooks/01_reproduce_amp_bert.ipynb`](notebooks/01_reproduce_amp_bert.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/BioGavin/AMP-BERT/blob/main/notebooks/01_reproduce_amp_bert.ipynb) |
 
-**What happens**
-1. `01` fine-tunes ProtBERT-BFD (15 epochs, effective batch size 64) and saves the model to `models/amp_bert/`.
-2. `02` loads that model and reports accuracy, F1, precision, recall, MCC and ROC-AUC on the merged external test set, writing per-sequence predictions to `results/external_test_predictions.csv`.
+Reports accuracy, F1, precision, recall, MCC and ROC-AUC on the merged external test set, writing per-sequence predictions to `results/external_test_predictions.csv`.
 
 ---
 
 ## Part 3 · ESCAPE benchmark (train + test)
 
-Train and evaluate AMP-BERT on the **ESCAPE benchmark** using the same pipeline.
+Train and evaluate AMP-BERT on the **ESCAPE benchmark** using the same pipeline. Point the notebook's `TRAIN_URL` / `TEST_URL` at your ESCAPE splits first.
 
-| step | notebook | Colab |
-|------|----------|-------|
-| **Train** | [`notebooks/03_escape_train.ipynb`](notebooks/03_escape_train.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/BioGavin/AMP-BERT/blob/main/notebooks/03_escape_train.ipynb) |
-| **Test**  | [`notebooks/04_escape_test.ipynb`](notebooks/04_escape_test.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/BioGavin/AMP-BERT/blob/main/notebooks/04_escape_test.ipynb) |
+| notebook | Colab |
+|----------|-------|
+| [`notebooks/02_escape_benchmark.ipynb`](notebooks/02_escape_benchmark.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/BioGavin/AMP-BERT/blob/main/notebooks/02_escape_benchmark.ipynb) |
 
 **Setup:** place the ESCAPE splits (`escape_train.csv`, `escape_test.csv`, schema `aa_seq, aa_len, AMP`) under `data/raw/escape/`, then run `03` → `04`. `03` saves the model to `models/amp_bert_escape/`; `04` evaluates it and writes
 `results/escape_test_predictions.csv`.
