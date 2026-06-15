@@ -19,6 +19,13 @@ Key flags (see `--help` for all): `--epochs`, `--lr`, `--batch-size`,
 `--grad-accum` (effective batch = batch-size × grad-accum, default 1×64=64),
 `--seed`, `--no-fp16`. Saves the fine-tuned model to `--model-dir`.
 
+Mean **training loss is printed after every epoch**. By default training uses
+all data (as in the paper), so there are no per-epoch validation metrics. To get
+per-epoch accuracy/F1/AUC, hold out a validation split:
+```bash
+python scripts/train_amp_bert.py --val-frac 0.1   # 10% held out, evaluated each epoch
+```
+
 ## Test
 ```bash
 python scripts/test_amp_bert.py --model-dir models/amp_bert

@@ -40,6 +40,9 @@ def parse_args():
     p.add_argument("--max-len", type=int, default=200)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--no-fp16", action="store_true", help="disable mixed precision (use on CPU / unsupported GPUs)")
+    p.add_argument("--val-frac", type=float, default=0.0,
+                   help="hold out this fraction for per-epoch eval metrics (0 = train on all data, as in the paper)")
+    p.add_argument("--eval-batch-size", type=int, default=32, help="per-device eval batch size (only with --val-frac)")
     return p.parse_args()
 
 
@@ -58,8 +61,20 @@ def main():
           f"effective_batch={args.batch_size * args.grad_accum} seed={args.seed}")
 
     df = load_dataset(args.train_csv, shuffle=True, random_state=args.seed)
-    train_dataset = AmpDataset(df, max_len=args.max_len)
-    print(f"[train] {len(train_dataset)} examples")
+
+    # Optional held-out validation set for per-epoch metrics (off by default).
+    eval_dataset = None
+    eval_kwargs = {}
+    if args.val_frac > 0:
+        n_val = int(len(df) * args.val_frac)
+        val_df, train_df = df.iloc[:n_val], df.iloc[n_val:]
+        eval_dataset = AmpDataset(val_df, max_len=args.max_len)
+        eval_kwargs = dict(evaluation_strategy="epoch", per_device_eval_batch_size=args.eval_batch_size)
+        print(f"[train] {len(train_df)} train / {len(val_df)} val examples (per-epoch eval ON)")
+    else:
+        train_df = df
+        print(f"[train] {len(train_df)} examples (training on all data; no per-epoch eval)")
+    train_dataset = AmpDataset(train_df, max_len=args.max_len)
 
     training_args = build_training_args(
         args.output_dir,
@@ -70,12 +85,15 @@ def main():
         weight_decay=args.weight_decay,
         fp16=not args.no_fp16,
         seed=args.seed,
+        logging_strategy="epoch",   # print mean training loss after every epoch
+        **eval_kwargs,
     )
 
     trainer = Trainer(
         model_init=model_init,
         args=training_args,
         train_dataset=train_dataset,
+        eval_dataset=eval_dataset,
         compute_metrics=compute_metrics,
     )
     trainer.train()
