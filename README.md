@@ -39,12 +39,18 @@ AMP-BERT/
 ```
 
 ### Setup
-Local:
+**Colab (recommended):** the notebooks are **self-contained** — open one via its
+Colab badge below and run top to bottom. The first cell installs a pinned
+`transformers`, all logic is inlined, every tunable parameter sits in a **Config**
+cell, and datasets are read straight from this repo's raw URLs. No cloning, no
+`git pull`, no restart cycle.
+
+**Local / scripting:** the same logic is packaged under `src/amp_bert/` for `import`
+and reuse:
 ```bash
 pip install -r requirements.txt
-pip install -e .          # makes `import amp_bert` available everywhere
+pip install -e .          # makes `import amp_bert` available
 ```
-On Colab, each notebook starts with a bootstrap cell that clones this repo and adds `src/` to `sys.path`, so no manual install is needed — just open and run.
 
 ### Datasets
 | file | role | label |
