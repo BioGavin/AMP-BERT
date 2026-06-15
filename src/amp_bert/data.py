@@ -41,7 +41,13 @@ class AmpDataset(Dataset):
         max_len: int = 200,
     ):
         self.df = df.reset_index(drop=True)
-        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, do_lower_case=False)
+        # use_fast=False loads the plain WordPiece BertTokenizer directly from
+        # vocab.txt. The fast tokenizer path on recent transformers tries to
+        # convert via sentencepiece (not installed on Colab) and fails for this
+        # older model, so we avoid it.
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            tokenizer_name, do_lower_case=False, use_fast=False
+        )
         self.max_len = max_len
         self.seqs, self.labels = self._get_seqs_labels()
 
