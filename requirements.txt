@@ -1,8 +1,10 @@
-# Core deep-learning stack. Versions mirror the original AMP-BERT environment
-# (transformers 4.19.x); relax the pins if you run on newer CUDA/torch.
+# Core deep-learning stack. transformers is pinned to a version that still ships
+# the classic BERT tokenizer (newer releases mishandle ProtBERT-BFD's WordPiece
+# vocab and demand sentencepiece). 4.46.3 works on Colab's Python 3.12.
 torch>=1.10
-transformers==4.19.2
-tokenizers>=0.12,<0.13
+transformers==4.46.3
+tokenizers>=0.20,<0.21
+sentencepiece
 pandas>=1.3
 numpy>=1.21
 scikit-learn>=1.0
