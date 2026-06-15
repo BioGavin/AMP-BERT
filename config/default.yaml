@@ -1,0 +1,27 @@
+# Default experiment configuration for AMP-BERT.
+# Notebooks read these values; override per-experiment as needed.
+
+model:
+  name: Rostlab/prot_bert_bfd
+  max_len: 200
+  num_labels: 2
+
+train:
+  num_train_epochs: 15
+  learning_rate: 5.0e-5
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 64   # effective batch size = 64
+  weight_decay: 0.1
+  warmup_steps: 0
+  fp16: true
+  seed: 0
+
+data:
+  train_csv: data/raw/all_veltri.csv
+  test_amp_csv: data/raw/veltri_dramp_cdhit_90.csv
+  test_nonamp_csv: data/raw/non_amp_ampep_cdhit90.csv
+
+# ESCAPE benchmark — fill in once the dataset is placed under data/raw/escape/
+escape:
+  train_csv: data/raw/escape/escape_train.csv
+  test_csv: data/raw/escape/escape_test.csv

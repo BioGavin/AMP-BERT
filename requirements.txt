@@ -1,0 +1,12 @@
+# Core deep-learning stack. Versions mirror the original AMP-BERT environment
+# (transformers 4.19.x); relax the pins if you run on newer CUDA/torch.
+torch>=1.10
+transformers==4.19.2
+tokenizers>=0.12,<0.13
+pandas>=1.3
+numpy>=1.21
+scikit-learn>=1.0
+# Notebook / experiment tooling
+jupyter
+matplotlib
+pyyaml
