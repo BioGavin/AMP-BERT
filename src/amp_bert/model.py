@@ -7,13 +7,20 @@ from transformers import AutoModelForSequenceClassification, TrainingArguments
 MODEL_NAME = "Rostlab/prot_bert_bfd"
 
 
-def model_init(model_name: str = MODEL_NAME):
-    """Fresh ProtBERT-BFD with a 2-class sequence-classification head.
-
-    Passed to ``Trainer(model_init=...)`` so every run starts from identical
-    pre-trained weights (important for reproducible hyper-parameter sweeps).
-    """
+def build_model(model_name: str = MODEL_NAME):
+    """Fresh ProtBERT-BFD with a 2-class sequence-classification head."""
     return AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
+
+
+def model_init():
+    """Zero-argument factory for ``Trainer(model_init=...)``.
+
+    Must take no arguments: HuggingFace ``Trainer`` inspects the signature and,
+    if it sees one parameter, calls it as ``model_init(trial)`` (passing
+    ``None`` outside a hyper-parameter search), which would be misread as the
+    model name. Every call starts from identical pre-trained weights.
+    """
+    return build_model(MODEL_NAME)
 
 
 def build_training_args(
