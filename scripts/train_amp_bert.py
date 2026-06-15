@@ -14,6 +14,7 @@ import sys
 # Run without `pip install -e .` by putting src/ on the path.
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
+import torch  # noqa: E402
 from transformers import Trainer  # noqa: E402
 
 from amp_bert import (  # noqa: E402
@@ -42,8 +43,17 @@ def parse_args():
     return p.parse_args()
 
 
+def report_device():
+    if torch.cuda.is_available():
+        print(f"[train] device: cuda — {torch.cuda.get_device_name(0)} "
+              f"({torch.cuda.device_count()} GPU visible)")
+    else:
+        print("[train] device: cpu (no CUDA detected — training will be very slow)")
+
+
 def main():
     args = parse_args()
+    report_device()
     print(f"[train] data={args.train_csv} epochs={args.epochs} "
           f"effective_batch={args.batch_size * args.grad_accum} seed={args.seed}")
 

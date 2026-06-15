@@ -15,6 +15,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 import pandas as pd  # noqa: E402
+import torch  # noqa: E402
 from transformers import (  # noqa: E402
     AutoModelForSequenceClassification,
     Trainer,
@@ -44,6 +45,11 @@ def parse_args():
 
 def main():
     args = parse_args()
+
+    if torch.cuda.is_available():
+        print(f"[test] device: cuda — {torch.cuda.get_device_name(0)}")
+    else:
+        print("[test] device: cpu (no CUDA detected)")
 
     if not pathlib.Path(args.model_dir).exists():
         sys.exit(f"[test] model not found: {args.model_dir} — run train_amp_bert.py first")
