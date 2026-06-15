@@ -79,12 +79,9 @@ Reports accuracy, F1, precision, recall, MCC and ROC-AUC on the merged external 
 
 Reproduce **AMP-BERT on the [ESCAPE benchmark](https://github.com/BCV-Uniandes/ESCAPE)** (Ojeda et al., NeurIPS 2025) — a **multilabel** task with 5 binary labels (Antibacterial, Antifungal, Antiviral, Antiparasitic, Antimicrobial). The notebook adapts AMP-BERT with a 5-way multilabel head (`BCEWithLogitsLoss`), trains on Fold1 + Fold2 (seed 0, single model — no multi-seed/ensemble), and evaluates on the Test split. Metrics replicate ESCAPE's official `compute_metrics`: per-class AP → **mAP**, and per-class best-threshold F1 → overall **F1** (paper reports AMP-BERT: F1 64.7 / mAP 66.9).
 
-**Data reconstruction:** the Harvard Dataverse release blanks the sequences from three license-restricted sources (DFBP, dbAMP 3.0, DBAASP), keeping only their `Hash`. The notebook runs ESCAPE's official `ESCAPE_API_call.py` to re-fetch those sequences and fill them back in by hash, then caches the reconstructed CSVs to Google Drive (this step hits external databases and can take several minutes; it only runs once).
+**Data:** the Harvard Dataverse release blanks the sequences from three license-restricted sources (DFBP, dbAMP 3.0, DBAASP), keeping only their `Hash`. The reconstructed full CSVs (sequences refilled by hash) are committed under [`data/escape/`](data/escape) and the notebook reads them directly — no download or reconstruction step needed.
 
 | notebook | Colab |
 |----------|-------|
 | [`notebooks/02_escape_benchmark.ipynb`](notebooks/02_escape_benchmark.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/BioGavin/AMP-BERT/blob/main/notebooks/02_escape_benchmark.ipynb) |
-
-**Setup:** place the ESCAPE splits (`escape_train.csv`, `escape_test.csv`, schema `aa_seq, aa_len, AMP`) under `data/raw/escape/`, then run `03` → `04`. `03` saves the model to `models/amp_bert_escape/`; `04` evaluates it and writes
-`results/escape_test_predictions.csv`.
 

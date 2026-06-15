@@ -22,15 +22,23 @@ files above (AMP + non-AMP). Notebook `02_test_reproduce.ipynb` does this merge.
 
 ## ESCAPE benchmark (multilabel)
 
-The ESCAPE dataset is **not stored here** — `notebooks/02_escape_benchmark.ipynb`
-downloads it from Harvard Dataverse ([doi:10.7910/DVN/C69MCD](https://doi.org/10.7910/DVN/C69MCD)):
-`Fold1` + `Fold2` (training folds) and `Test`. Its schema differs from the binary
-files above — `Sequence, Hash, Antibacterial, Antifungal, Antiviral, Antiparasitic,
-Antimicrobial` — where the five label columns are 0/1 multi-hot (non-AMP = all zeros).
-AMP-BERT uses `Sequence` + the five labels only (`Hash` = `sha256(sequence)[:16]`).
+## `escape/` (multilabel)
 
-**Reconstruction:** the Dataverse files blank the sequences from three
-license-restricted sources (DFBP, dbAMP 3.0, DBAASP), leaving only their `Hash`
-(≈3.5k of the ~16.5k test rows). The notebook runs ESCAPE's official
-`ESCAPE_API_call.py` to re-fetch those sequences from the source databases and
-refill them by hash, producing `*_reconstructed.csv` (cached to Drive).
+The ESCAPE benchmark, **reconstructed** to fill in the license-restricted
+sequences that Harvard Dataverse ([doi:10.7910/DVN/C69MCD](https://doi.org/10.7910/DVN/C69MCD))
+ships blanked (sourced from DFBP, dbAMP 3.0, DBAASP; ≈3.5k of the ~16.5k test rows).
+`notebooks/02_escape_benchmark.ipynb` reads these directly.
+
+| file | role | rows |
+|------|------|------|
+| `escape/Fold1_reconstructed.csv` | training fold 1 | 32948 |
+| `escape/Fold2_reconstructed.csv` | training fold 2 | 32922 |
+| `escape/Test_reconstructed.csv`  | independent test | 16489 |
+
+Schema: `Sequence, Hash, Antibacterial, Antifungal, Antiviral, Antiparasitic,
+Antimicrobial` — the five label columns are 0/1 multi-hot (non-AMP = all zeros);
+`Hash` = `sha256(sequence)[:16]`. AMP-BERT uses `Sequence` + the five labels only.
+
+> The ESCAPE dataset is CC BY 4.0, but the three sources above carry their own
+> upstream licenses — these reconstructed files are kept here for reproduction
+> convenience; redistribute with that in mind.
