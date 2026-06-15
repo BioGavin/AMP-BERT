@@ -77,7 +77,7 @@ Reports accuracy, F1, precision, recall, MCC and ROC-AUC on the merged external 
 
 ## Part 3 · ESCAPE benchmark (train + test)
 
-Train and evaluate AMP-BERT on the **ESCAPE benchmark** using the same pipeline. Point the notebook's `TRAIN_URL` / `TEST_URL` at your ESCAPE splits first.
+Reproduce **AMP-BERT on the [ESCAPE benchmark](https://github.com/BCV-Uniandes/ESCAPE)** (Ojeda et al., NeurIPS 2025) — a **multilabel** task with 5 binary labels (Antibacterial, Antifungal, Antiviral, Antiparasitic, Antimicrobial). The notebook adapts AMP-BERT with a 5-way multilabel head (`BCEWithLogitsLoss`), auto-downloads the dataset from Harvard Dataverse, trains on Fold1 + Fold2 (seed 0, single model — no multi-seed/ensemble), and evaluates on the Test split. Metrics replicate ESCAPE's official `compute_metrics`: per-class AP → **mAP**, and per-class best-threshold F1 → overall **F1** (paper reports AMP-BERT: F1 64.7 / mAP 66.9).
 
 | notebook | Colab |
 |----------|-------|

@@ -20,8 +20,12 @@ All CSVs share the schema produced by the AMP-BERT pipeline:
 The external test set used in the paper is the **concatenation** of the two test
 files above (AMP + non-AMP). Notebook `02_test_reproduce.ipynb` does this merge.
 
-## `raw/escape/`
+## ESCAPE benchmark (multilabel)
 
-Placeholder for the **ESCAPE benchmark**. Drop the train/test CSVs here (same
-schema as above) and point `config/default.yaml -> escape.*` at them. Notebooks
-`03_escape_train.ipynb` and `04_escape_test.ipynb` consume these.
+The ESCAPE dataset is **not stored here** — `notebooks/02_escape_benchmark.ipynb`
+auto-downloads it from Harvard Dataverse ([doi:10.7910/DVN/C69MCD](https://doi.org/10.7910/DVN/C69MCD)):
+`Fold1` + `Fold2` (training folds) and `Test`. Its schema differs from the binary
+files above — `Sequence, Hash, Antibacterial, Antifungal, Antiviral, Antiparasitic,
+Antimicrobial` — where the five label columns are 0/1 multi-hot (non-AMP = all zeros).
+AMP-BERT uses `Sequence` + the five labels only (the `Hash` structural maps are for
+the ESCAPE Baseline, not needed here).
