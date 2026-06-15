@@ -23,9 +23,14 @@ files above (AMP + non-AMP). Notebook `02_test_reproduce.ipynb` does this merge.
 ## ESCAPE benchmark (multilabel)
 
 The ESCAPE dataset is **not stored here** — `notebooks/02_escape_benchmark.ipynb`
-auto-downloads it from Harvard Dataverse ([doi:10.7910/DVN/C69MCD](https://doi.org/10.7910/DVN/C69MCD)):
+downloads it from Harvard Dataverse ([doi:10.7910/DVN/C69MCD](https://doi.org/10.7910/DVN/C69MCD)):
 `Fold1` + `Fold2` (training folds) and `Test`. Its schema differs from the binary
 files above — `Sequence, Hash, Antibacterial, Antifungal, Antiviral, Antiparasitic,
 Antimicrobial` — where the five label columns are 0/1 multi-hot (non-AMP = all zeros).
-AMP-BERT uses `Sequence` + the five labels only (the `Hash` structural maps are for
-the ESCAPE Baseline, not needed here).
+AMP-BERT uses `Sequence` + the five labels only (`Hash` = `sha256(sequence)[:16]`).
+
+**Reconstruction:** the Dataverse files blank the sequences from three
+license-restricted sources (DFBP, dbAMP 3.0, DBAASP), leaving only their `Hash`
+(≈3.5k of the ~16.5k test rows). The notebook runs ESCAPE's official
+`ESCAPE_API_call.py` to re-fetch those sequences from the source databases and
+refill them by hash, producing `*_reconstructed.csv` (cached to Drive).

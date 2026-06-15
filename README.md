@@ -77,7 +77,9 @@ Reports accuracy, F1, precision, recall, MCC and ROC-AUC on the merged external 
 
 ## Part 3 · ESCAPE benchmark (train + test)
 
-Reproduce **AMP-BERT on the [ESCAPE benchmark](https://github.com/BCV-Uniandes/ESCAPE)** (Ojeda et al., NeurIPS 2025) — a **multilabel** task with 5 binary labels (Antibacterial, Antifungal, Antiviral, Antiparasitic, Antimicrobial). The notebook adapts AMP-BERT with a 5-way multilabel head (`BCEWithLogitsLoss`), auto-downloads the dataset from Harvard Dataverse, trains on Fold1 + Fold2 (seed 0, single model — no multi-seed/ensemble), and evaluates on the Test split. Metrics replicate ESCAPE's official `compute_metrics`: per-class AP → **mAP**, and per-class best-threshold F1 → overall **F1** (paper reports AMP-BERT: F1 64.7 / mAP 66.9).
+Reproduce **AMP-BERT on the [ESCAPE benchmark](https://github.com/BCV-Uniandes/ESCAPE)** (Ojeda et al., NeurIPS 2025) — a **multilabel** task with 5 binary labels (Antibacterial, Antifungal, Antiviral, Antiparasitic, Antimicrobial). The notebook adapts AMP-BERT with a 5-way multilabel head (`BCEWithLogitsLoss`), trains on Fold1 + Fold2 (seed 0, single model — no multi-seed/ensemble), and evaluates on the Test split. Metrics replicate ESCAPE's official `compute_metrics`: per-class AP → **mAP**, and per-class best-threshold F1 → overall **F1** (paper reports AMP-BERT: F1 64.7 / mAP 66.9).
+
+**Data reconstruction:** the Harvard Dataverse release blanks the sequences from three license-restricted sources (DFBP, dbAMP 3.0, DBAASP), keeping only their `Hash`. The notebook runs ESCAPE's official `ESCAPE_API_call.py` to re-fetch those sequences and fill them back in by hash, then caches the reconstructed CSVs to Google Drive (this step hits external databases and can take several minutes; it only runs once).
 
 | notebook | Colab |
 |----------|-------|
