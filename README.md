@@ -73,6 +73,10 @@ Reproduce AMP-BERT exactly as published: fine-tune on the Veltri training set, t
 
 Reports accuracy, F1, precision, recall, MCC and ROC-AUC on the merged external test set, writing per-sequence predictions to `results/external_test_predictions.csv`.
 
+**On a server (no Colab):** use the CLI scripts in [`scripts/`](scripts) —
+`python scripts/train_amp_bert.py` then `python scripts/test_amp_bert.py`, or
+`bash scripts/run_amp_bert.sh` for both. See [scripts/README.md](scripts/README.md).
+
 ---
 
 ## Part 3 · ESCAPE benchmark (train + test)
