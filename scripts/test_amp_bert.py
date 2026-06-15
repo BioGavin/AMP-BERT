@@ -23,6 +23,7 @@ from transformers import (  # noqa: E402
 )
 
 from amp_bert import AmpDataset, compute_metrics, load_dataset  # noqa: E402
+from amp_bert.metrics import binary_metrics  # noqa: E402
 from amp_bert.config import (  # noqa: E402
     MODELS_DIR,
     RESULTS_DIR,
@@ -68,10 +69,16 @@ def main():
     )
     trainer = Trainer(model=model, args=eval_args, compute_metrics=compute_metrics)
 
-    predictions, _, metrics = trainer.predict(test_dataset)
+    predictions, labels, _ = trainer.predict(test_dataset)
+    m = binary_metrics(labels, predictions)
     print("[test] metrics:")
-    for k, v in metrics.items():
-        print(f"    {k}: {v:.4f}" if isinstance(v, float) else f"    {k}: {v}")
+    print(f"    SN    (sensitivity): {m['sensitivity']:.4f}")
+    print(f"    SP    (specificity): {m['specificity']:.4f}")
+    print(f"    F1                 : {m['f1']:.4f}")
+    print(f"    ACC   (accuracy)   : {m['accuracy']:.4f}")
+    print(f"    AUROC              : {m.get('auroc', float('nan')):.4f}")
+    print(f"    AUPR               : {m.get('aupr', float('nan')):.4f}")
+    print(f"    (precision={m['precision']:.4f}, MCC={m['mcc']:.4f})")
 
     pathlib.Path(args.pred_csv).parent.mkdir(parents=True, exist_ok=True)
     out = test_df.copy()

@@ -5,6 +5,8 @@ from __future__ import annotations
 import numpy as np
 from sklearn.metrics import (
     accuracy_score,
+    average_precision_score,
+    confusion_matrix,
     matthews_corrcoef,
     precision_recall_fscore_support,
     roc_auc_score,
@@ -17,28 +19,40 @@ def _softmax(logits: np.ndarray) -> np.ndarray:
     return e / e.sum(axis=-1, keepdims=True)
 
 
-def compute_metrics(pred):
-    """HuggingFace ``Trainer``-compatible metric callback.
+def binary_metrics(labels, logits) -> dict:
+    """Full binary-classification metric set from labels and class logits.
 
-    Returns accuracy, F1, precision, recall, MCC and ROC-AUC. MCC and AUC are
-    standard in AMP literature and were missing from the original notebook.
+    Returns sensitivity (SN, = recall), specificity (SP), F1, accuracy (ACC),
+    precision, MCC, AUROC and AUPR. AUROC/AUPR use the positive-class
+    probability and need both classes present.
     """
-    labels = pred.label_ids
-    logits = pred.predictions
+    labels = np.asarray(labels)
+    logits = np.asarray(logits)
     preds = logits.argmax(-1)
+
+    # Confusion matrix with fixed label order so it is always 2x2.
+    tn, fp, fn, tp = confusion_matrix(labels, preds, labels=[0, 1]).ravel()
+    sensitivity = tp / (tp + fn) if (tp + fn) else 0.0   # SN / recall
+    specificity = tn / (tn + fp) if (tn + fp) else 0.0   # SP
 
     precision, recall, f1, _ = precision_recall_fscore_support(
         labels, preds, average="binary", zero_division=0
     )
     metrics = {
-        "accuracy": accuracy_score(labels, preds),
-        "f1": f1,
+        "accuracy": accuracy_score(labels, preds),   # ACC
+        "sensitivity": sensitivity,                  # SN
+        "specificity": specificity,                  # SP
         "precision": precision,
-        "recall": recall,
+        "f1": f1,                                    # F1
         "mcc": matthews_corrcoef(labels, preds),
     }
-    # AUC needs the positive-class probability and both classes present.
     if len(np.unique(labels)) == 2:
-        probs = _softmax(np.asarray(logits))[:, 1]
-        metrics["roc_auc"] = roc_auc_score(labels, probs)
+        probs = _softmax(logits)[:, 1]
+        metrics["auroc"] = roc_auc_score(labels, probs)        # AUROC
+        metrics["aupr"] = average_precision_score(labels, probs)  # AUPR
     return metrics
+
+
+def compute_metrics(pred):
+    """HuggingFace ``Trainer``-compatible metric callback (wraps binary_metrics)."""
+    return binary_metrics(pred.label_ids, pred.predictions)
