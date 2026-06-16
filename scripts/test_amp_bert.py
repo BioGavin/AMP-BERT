@@ -38,7 +38,6 @@ def parse_args():
     p.add_argument("--amp-csv", default=str(TEST_AMP_CSV), help="AMP test CSV (DRAMP)")
     p.add_argument("--nonamp-csv", default=str(TEST_NONAMP_CSV), help="non-AMP test CSV (AMPEP)")
     p.add_argument("--pred-csv", default=str(RESULTS_DIR / "external_test_predictions.csv"))
-    p.add_argument("--output-dir", default=str(RESULTS_DIR / "amp_bert_test"), help="Trainer working dir")
     p.add_argument("--batch-size", type=int, default=56, help="per-device eval batch size")
     p.add_argument("--max-len", type=int, default=200)
     return p.parse_args()
@@ -62,8 +61,8 @@ def main():
     test_dataset = AmpDataset(test_df, max_len=args.max_len)
 
     model = AutoModelForSequenceClassification.from_pretrained(args.model_dir)
+    # predict-only: no output_dir needed (nothing is written there)
     eval_args = TrainingArguments(
-        output_dir=args.output_dir,
         per_device_eval_batch_size=args.batch_size,
         report_to="none",
     )
