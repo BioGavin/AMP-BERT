@@ -41,5 +41,27 @@ EPOCHS=1 bash scripts/run_amp_bert.sh              # smoke test
 CUDA_VISIBLE_DEVICES=0 nohup bash scripts/run_amp_bert.sh > run.log 2>&1 &
 ```
 
-> ESCAPE (Part 3, multilabel) currently lives only in `notebooks/02_escape_benchmark.ipynb`.
-> Ask if you want matching `train_escape.py` / `test_escape.py` server scripts.
+## ESCAPE benchmark (Part 3, multilabel)
+
+Same idea for the ESCAPE multilabel task (5 labels), reading the reconstructed
+CSVs in `data/escape/`.
+
+```bash
+python scripts/train_escape.py --epochs 5 --model-dir models/amp_bert_escape
+python scripts/test_escape.py  --model-dir models/amp_bert_escape
+bash scripts/run_escape.sh                    # both (EPOCHS=1 for smoke test)
+```
+
+- **train_escape.py**: **two-fold cross-validation** — trains one model on Fold1
+  and another on Fold2, saved to `<model-dir>/fold1` and `<model-dir>/fold2`.
+  Add `--val` to also evaluate on the held-out fold each epoch (slower);
+  `--only-fold 1|2` to train just one. Logs to `results/escape_train.log`.
+- **test_escape.py**: loads both fold models, **averages their sigmoid
+  probabilities (ensemble)** on the Test split, then reports per-class AP/F1 and
+  overall **mAP / F1** (ESCAPE's official metric). Writes per-class probabilities
+  to `--pred-csv`, logs to `results/escape_test.log`. (Falls back to a single
+  model placed directly in `<model-dir>`.)
+
+> This matches ESCAPE's two-fold protocol (single seed, no multi-seed averaging).
+> Each fold trains on ~33k sequences; training **two** models takes a while —
+> start with `EPOCHS=1`, and use `--only-fold` to test the pipeline on one fold.
