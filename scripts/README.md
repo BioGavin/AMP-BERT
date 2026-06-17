@@ -1,8 +1,9 @@
 # Server / CLI scripts
 
-Headless training & evaluation of AMP-BERT (the Part 2 paper reproduction),
-for running on a GPU server instead of Colab. They reuse the `src/amp_bert`
-package, so behaviour matches the notebooks.
+Headless training & evaluation for running on a GPU server instead of Colab:
+the Part 2 paper reproduction (`*_amp_bert`) and the Part 3 ESCAPE multilabel
+benchmark (`*_escape`). They reuse the `src/amp_bert` package, so behaviour
+matches the notebooks.
 
 ## Setup (once)
 ```bash
@@ -13,7 +14,7 @@ A CUDA GPU is strongly recommended (ProtBERT-BFD is large). `fp16` is on by defa
 
 ## Train
 ```bash
-python scripts/train_amp_bert.py --epochs 15 --model-dir models/amp_bert
+python3 scripts/train_amp_bert.py --epochs 15 --model-dir models/amp_bert
 ```
 Key flags (see `--help` for all): `--epochs`, `--lr`, `--batch-size`,
 `--grad-accum` (effective batch = batch-size × grad-accum, default 1×64=64),
@@ -23,15 +24,15 @@ Mean **training loss is printed after every epoch**. By default training uses
 all data (as in the paper), so there are no per-epoch validation metrics. To get
 per-epoch accuracy/F1/AUC, hold out a validation split:
 ```bash
-python scripts/train_amp_bert.py --val-frac 0.1   # 10% held out, evaluated each epoch
+python3 scripts/train_amp_bert.py --val-frac 0.1   # 10% held out, evaluated each epoch
 ```
 
 ## Test
 ```bash
-python scripts/test_amp_bert.py --model-dir models/amp_bert
+python3 scripts/test_amp_bert.py --model-dir models/amp_bert
 ```
 Evaluates on the external test set (DRAMP AMPs ∪ AMPEP non-AMPs), prints
-accuracy / F1 / precision / recall / MCC / ROC-AUC, and writes per-sequence
+SN / SP / F1 / ACC / AUROC / AUPR (plus precision, MCC), and writes per-sequence
 predictions to `results/external_test_predictions.csv`.
 
 ## Both, end to end
@@ -41,14 +42,16 @@ EPOCHS=1 bash scripts/run_amp_bert.sh              # smoke test
 CUDA_VISIBLE_DEVICES=0 nohup bash scripts/run_amp_bert.sh > run.log 2>&1 &
 ```
 
+> Use `python3` (these scripts assume it; many Linux hosts have no `python` alias).
+
 ## ESCAPE benchmark (Part 3, multilabel)
 
 Same idea for the ESCAPE multilabel task (5 labels), reading the reconstructed
 CSVs in `data/escape/`.
 
 ```bash
-python scripts/train_escape.py --epochs 5 --model-dir models/amp_bert_escape
-python scripts/test_escape.py  --model-dir models/amp_bert_escape
+python3 scripts/train_escape.py --model-dir models/amp_bert_escape   # default 15 epochs (Table 5)
+python3 scripts/test_escape.py  --model-dir models/amp_bert_escape
 bash scripts/run_escape.sh                    # both (EPOCHS=1 for smoke test)
 ```
 

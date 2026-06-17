@@ -35,7 +35,6 @@ AMP-BERT/
 │   ├── train_amp_bert.py  test_amp_bert.py  run_amp_bert.sh   # Part 2
 │   └── train_escape.py    test_escape.py    run_escape.sh     # Part 3
 ├── data/raw/  data/escape/   # datasets (see data/README.md)
-├── config/default.yaml    # experiment hyper-parameters
 ├── models/  results/      # checkpoints & outputs (git-ignored)
 └── requirements.txt  pyproject.toml
 ```

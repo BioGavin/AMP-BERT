@@ -18,9 +18,7 @@ All CSVs share the schema produced by the AMP-BERT pipeline:
 | `non_amp_ampep_cdhit90.csv` | external **test** — non-AMPs (AMPEP, CD-HIT 90%) | 1908 | non-AMP |
 
 The external test set used in the paper is the **concatenation** of the two test
-files above (AMP + non-AMP). Notebook `02_test_reproduce.ipynb` does this merge.
-
-## ESCAPE benchmark (multilabel)
+files above (AMP + non-AMP). Notebook `01_reproduce_amp_bert.ipynb` does this merge.
 
 ## `escape/` (multilabel)
 

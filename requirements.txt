@@ -8,7 +8,5 @@ sentencepiece
 pandas>=1.3
 numpy>=1.21
 scikit-learn>=1.0
-# Notebook / experiment tooling
+# Notebook tooling (local use; Colab already has Jupyter)
 jupyter
-matplotlib
-pyyaml
