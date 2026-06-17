@@ -23,7 +23,7 @@ from transformers import (  # noqa: E402
     TrainingArguments,
 )
 
-from amp_bert import AmpDataset, compute_metrics, load_dataset  # noqa: E402
+from amp_bert import AmpDataset, load_dataset  # noqa: E402
 from amp_bert.metrics import binary_metrics  # noqa: E402
 from amp_bert.config import (  # noqa: E402
     MODELS_DIR,
@@ -85,7 +85,7 @@ def main():
         per_device_eval_batch_size=args.batch_size,
         report_to="none",
     )
-    trainer = Trainer(model=model, args=eval_args, compute_metrics=compute_metrics)
+    trainer = Trainer(model=model, args=eval_args)
 
     predictions, labels, _ = trainer.predict(test_dataset)
     m = binary_metrics(labels, predictions)

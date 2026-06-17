@@ -53,7 +53,7 @@ def build_training_args(
         logging_steps=100,
         do_train=True,
         do_eval=True,
-        evaluation_strategy="no",
+        eval_strategy="no",
         save_strategy="no",
         fp16=fp16,
         fp16_opt_level="O2",

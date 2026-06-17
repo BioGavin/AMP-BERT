@@ -13,7 +13,7 @@ EPOCHS="${EPOCHS:-15}"
 MODEL_DIR="${MODEL_DIR:-models/amp_bert}"
 
 echo "==> Training (epochs=$EPOCHS) -> $MODEL_DIR"
-python scripts/train_amp_bert.py --epochs "$EPOCHS" --model-dir "$MODEL_DIR"
+python3 scripts/train_amp_bert.py --epochs "$EPOCHS" --model-dir "$MODEL_DIR"
 
 echo "==> Testing"
-python scripts/test_amp_bert.py --model-dir "$MODEL_DIR"
+python3 scripts/test_amp_bert.py --model-dir "$MODEL_DIR"

@@ -2,7 +2,7 @@
 
 AMP-BERT is a deep-learning classifier that labels a peptide sequence as **AMP** (antimicrobial) or **non-AMP**. It fine-tunes the protein language model **[ProtBERT-BFD](https://huggingface.co/Rostlab/prot_bert_bfd)** ([Elnaggar et al., 2021](https://doi.org/10.1109/TPAMI.2021.3095381)) on curated AMP datasets.
 
-This repository is organised around three things you can reproduce end-to-end, all runnable on **Google Colab**:
+This repository is organised around three things you can reproduce end-to-end, runnable on **Google Colab** or headless on a **GPU server** via the CLI scripts in [`scripts/`](scripts):
 
 1. [Part 1 · About AMP-BERT](#part-1--about-amp-bert)
 2. [Part 2 · Reproduce the original paper (train + test)](#part-2--reproduce-the-original-paper-train--test)
@@ -21,16 +21,20 @@ Antimicrobial resistance is a growing health concern. Antimicrobial peptides (AM
 ### Repository layout
 ```
 AMP-BERT/
-├── src/amp_bert/          # reusable package (notebooks stay thin)
-│   ├── config.py          # repo-relative paths (no hard-coded /home/...)
-│   ├── data.py            # AmpDataset + load_dataset
-│   ├── metrics.py         # accuracy / F1 / precision / recall / MCC / AUC
-│   └── model.py           # model_init + build_training_args
-├── notebooks/
-│   ├── 01_reproduce_amp_bert.ipynb  # Part 2 — train + test (one notebook)
-│   ├── 02_escape_benchmark.ipynb    # Part 3 — train + test (one notebook)
+├── src/amp_bert/          # reusable package (notebooks & scripts stay thin)
+│   ├── config.py          # repo-relative dataset / model paths
+│   ├── data.py            # AmpDataset + load_dataset (binary)
+│   ├── metrics.py         # SN / SP / F1 / ACC / AUROC / AUPR + MCC (binary)
+│   ├── model.py           # model_init + build_training_args
+│   └── escape.py          # ESCAPE multilabel: EscapeDataset, escape_scores, model_init
+├── notebooks/             # Colab, self-contained
+│   ├── 01_reproduce_amp_bert.ipynb  # Part 2 — train + test
+│   ├── 02_escape_benchmark.ipynb    # Part 3 — train + test
 │   └── _legacy_fine-tune_with_amps.ipynb  # original notebook, kept for reference
-├── data/raw/              # datasets (see data/README.md)
+├── scripts/               # server / CLI train + test (see scripts/README.md)
+│   ├── train_amp_bert.py  test_amp_bert.py  run_amp_bert.sh   # Part 2
+│   └── train_escape.py    test_escape.py    run_escape.sh     # Part 3
+├── data/raw/  data/escape/   # datasets (see data/README.md)
 ├── config/default.yaml    # experiment hyper-parameters
 ├── models/  results/      # checkpoints & outputs (git-ignored)
 └── requirements.txt  pyproject.toml
@@ -45,12 +49,15 @@ Each notebook covers **both train and test**, saving/loading the model via Googl
 Drive so you can retrain once and re-test in any later session. No cloning, no
 `git pull`, no restart cycle.
 
-**Local / scripting:** the same logic is packaged under `src/amp_bert/` for `import`
-and reuse:
+**Server / CLI:** for headless runs on a GPU server, [`scripts/`](scripts) provides
+command-line train/test scripts that reuse the same `src/amp_bert/` package (so
+behaviour matches the notebooks). They log to file, print the device, and take
+hyper-parameters as flags. Install the deps first:
 ```bash
 pip install -r requirements.txt
-pip install -e .          # makes `import amp_bert` available
+pip install -e .          # optional; scripts also add src/ to sys.path
 ```
+Then see [scripts/README.md](scripts/README.md), or the per-part commands below.
 
 ### Datasets
 | file | role | label |
@@ -71,11 +78,16 @@ Reproduce AMP-BERT exactly as published: fine-tune on the Veltri training set, t
 |----------|-------|
 | [`notebooks/01_reproduce_amp_bert.ipynb`](notebooks/01_reproduce_amp_bert.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/BioGavin/AMP-BERT/blob/main/notebooks/01_reproduce_amp_bert.ipynb) |
 
-Reports accuracy, F1, precision, recall, MCC and ROC-AUC on the merged external test set, writing per-sequence predictions to `results/external_test_predictions.csv`.
+Reports SN / SP / F1 / ACC / AUROC / AUPR (plus precision, MCC) on the merged external test set, writing per-sequence predictions to `results/external_test_predictions.csv`.
 
-**On a server (no Colab):** use the CLI scripts in [`scripts/`](scripts) —
-`python scripts/train_amp_bert.py` then `python scripts/test_amp_bert.py`, or
-`bash scripts/run_amp_bert.sh` for both. See [scripts/README.md](scripts/README.md).
+**On a server (no Colab):**
+```bash
+python3 scripts/train_amp_bert.py --epochs 15      # -> models/amp_bert
+python3 scripts/test_amp_bert.py                   # metrics + predictions
+# or both at once:
+bash scripts/run_amp_bert.sh
+```
+See [scripts/README.md](scripts/README.md) for all flags (`--lr`, `--batch-size`, `--grad-accum`, `--val-frac`, `--log-file`, …).
 
 ---
 
@@ -88,4 +100,15 @@ Reproduce **AMP-BERT on the [ESCAPE benchmark](https://github.com/BCV-Uniandes/E
 | notebook | Colab |
 |----------|-------|
 | [`notebooks/02_escape_benchmark.ipynb`](notebooks/02_escape_benchmark.ipynb) | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/BioGavin/AMP-BERT/blob/main/notebooks/02_escape_benchmark.ipynb) |
+
+The Colab notebook trains a single model on Fold1 + Fold2 combined. The **server scripts** follow ESCAPE's **two-fold cross-validation**: one model per fold, then ensembled on the Test split (hyper-parameters aligned with the paper's Table 5).
+
+**On a server (no Colab):**
+```bash
+python3 scripts/train_escape.py        # trains models/amp_bert_escape/{fold1,fold2}
+python3 scripts/test_escape.py         # ensembles both, reports per-class AP/F1 + mAP/F1
+# or both at once:
+bash scripts/run_escape.sh
+```
+Use `--only-fold 1 --epochs 1` for a quick pipeline check first. See [scripts/README.md](scripts/README.md).
 

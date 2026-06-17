@@ -20,7 +20,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 import torch  # noqa: E402
-from transformers import Trainer  # noqa: E402
+from transformers import Trainer, TrainerCallback  # noqa: E402
 
 from amp_bert import build_training_args  # noqa: E402
 from amp_bert.config import (  # noqa: E402
@@ -37,6 +37,15 @@ from amp_bert.escape import (  # noqa: E402
 )
 
 
+class LogToFile(TrainerCallback):
+    def __init__(self, logger):
+        self.logger = logger
+
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        if logs:
+            self.logger.info("step %d | %s", state.global_step, logs)
+
+
 def parse_args():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     p.add_argument("--fold1", default=str(ESCAPE_FOLD1_CSV), help="ESCAPE Fold1 CSV")
@@ -45,10 +54,10 @@ def parse_args():
                    help="parent dir; the two fold models go in <dir>/fold1 and <dir>/fold2")
     p.add_argument("--output-dir", default=str(RESULTS_DIR / "escape_train"), help="Trainer working dir")
     p.add_argument("--log-file", default=str(RESULTS_DIR / "escape_train.log"))
-    p.add_argument("--epochs", type=int, default=5)
-    p.add_argument("--lr", type=float, default=5e-5)
+    p.add_argument("--epochs", type=int, default=15)
+    p.add_argument("--lr", type=float, default=1e-5)
     p.add_argument("--batch-size", type=int, default=1, help="per-device train batch size (lower if OOM)")
-    p.add_argument("--grad-accum", type=int, default=16, help="gradient accumulation (effective batch = batch-size * this)")
+    p.add_argument("--grad-accum", type=int, default=64, help="gradient accumulation (effective batch = batch-size * this)")
     p.add_argument("--weight-decay", type=float, default=0.1)
     p.add_argument("--max-len", type=int, default=200)
     p.add_argument("--seed", type=int, default=0)
@@ -84,7 +93,7 @@ def train_one(name, train_csv, val_csv, args, log):
     eval_dataset, eval_kwargs = None, {}
     if args.val:
         eval_dataset = EscapeDataset(load_escape(val_csv), max_len=args.max_len)
-        eval_kwargs = dict(evaluation_strategy="epoch", per_device_eval_batch_size=args.eval_batch_size)
+        eval_kwargs = dict(eval_strategy="epoch", per_device_eval_batch_size=args.eval_batch_size)
         log.info("    validate on %s (%d examples) each epoch", val_csv, len(eval_dataset))
 
     training_args = build_training_args(
@@ -105,6 +114,7 @@ def train_one(name, train_csv, val_csv, args, log):
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         compute_metrics=escape_compute_metrics,
+        callbacks=[LogToFile(log)],
     )
     trainer.train()
 

@@ -8,6 +8,7 @@ Example
 The resulting model is what notebook 02 / scripts/test_amp_bert.py load for evaluation.
 """
 import argparse
+import logging
 import pathlib
 import sys
 
@@ -15,7 +16,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
 import torch  # noqa: E402
-from transformers import Trainer  # noqa: E402
+from transformers import Trainer, TrainerCallback  # noqa: E402
 
 from amp_bert import (  # noqa: E402
     AmpDataset,
@@ -32,6 +33,7 @@ def parse_args():
     p.add_argument("--train-csv", default=str(TRAIN_CSV), help="training CSV (cols: aa_seq, AMP)")
     p.add_argument("--model-dir", default=str(MODELS_DIR / "amp_bert"), help="where to save the fine-tuned model")
     p.add_argument("--output-dir", default=str(RESULTS_DIR / "amp_bert_train"), help="Trainer working dir")
+    p.add_argument("--log-file", default=str(RESULTS_DIR / "amp_bert_train.log"))
     p.add_argument("--epochs", type=int, default=15)
     p.add_argument("--lr", type=float, default=5e-5)
     p.add_argument("--batch-size", type=int, default=1, help="per-device train batch size")
@@ -46,19 +48,37 @@ def parse_args():
     return p.parse_args()
 
 
-def report_device():
-    if torch.cuda.is_available():
-        print(f"[train] device: cuda — {torch.cuda.get_device_name(0)} "
-              f"({torch.cuda.device_count()} GPU visible)")
-    else:
-        print("[train] device: cpu (no CUDA detected — training will be very slow)")
+class LogToFile(TrainerCallback):
+    """Forward Trainer logs (per-epoch loss, eval metrics) to the Python logger."""
+    def __init__(self, logger):
+        self.logger = logger
+
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        if logs:
+            self.logger.info("step %d | %s", state.global_step, logs)
+
+
+def setup_logging(log_file):
+    pathlib.Path(log_file).parent.mkdir(parents=True, exist_ok=True)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [train] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=[logging.FileHandler(log_file, mode="w"), logging.StreamHandler()],
+    )
+    return logging.getLogger("train")
 
 
 def main():
     args = parse_args()
-    report_device()
-    print(f"[train] data={args.train_csv} epochs={args.epochs} "
-          f"effective_batch={args.batch_size * args.grad_accum} seed={args.seed}")
+    log = setup_logging(args.log_file)
+    log.info("logging to %s", args.log_file)
+    if torch.cuda.is_available():
+        log.info("device: cuda — %s (%d GPU visible)", torch.cuda.get_device_name(0), torch.cuda.device_count())
+    else:
+        log.info("device: cpu (no CUDA detected — training will be very slow)")
+    log.info("data=%s epochs=%d effective_batch=%d seed=%d",
+             args.train_csv, args.epochs, args.batch_size * args.grad_accum, args.seed)
 
     df = load_dataset(args.train_csv, shuffle=True, random_state=args.seed)
 
@@ -69,11 +89,11 @@ def main():
         n_val = int(len(df) * args.val_frac)
         val_df, train_df = df.iloc[:n_val], df.iloc[n_val:]
         eval_dataset = AmpDataset(val_df, max_len=args.max_len)
-        eval_kwargs = dict(evaluation_strategy="epoch", per_device_eval_batch_size=args.eval_batch_size)
-        print(f"[train] {len(train_df)} train / {len(val_df)} val examples (per-epoch eval ON)")
+        eval_kwargs = dict(eval_strategy="epoch", per_device_eval_batch_size=args.eval_batch_size)
+        log.info("%d train / %d val examples (per-epoch eval ON)", len(train_df), len(val_df))
     else:
         train_df = df
-        print(f"[train] {len(train_df)} examples (training on all data; no per-epoch eval)")
+        log.info("%d examples (training on all data; no per-epoch eval)", len(train_df))
     train_dataset = AmpDataset(train_df, max_len=args.max_len)
 
     training_args = build_training_args(
@@ -85,7 +105,7 @@ def main():
         weight_decay=args.weight_decay,
         fp16=not args.no_fp16,
         seed=args.seed,
-        logging_strategy="epoch",   # print mean training loss after every epoch
+        logging_strategy="epoch",   # log mean training loss after every epoch
         **eval_kwargs,
     )
 
@@ -95,11 +115,12 @@ def main():
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         compute_metrics=compute_metrics,
+        callbacks=[LogToFile(log)],
     )
     trainer.train()
 
     trainer.save_model(args.model_dir)
-    print(f"[train] saved model to {args.model_dir}")
+    log.info("saved model to %s", args.model_dir)
 
 
 if __name__ == "__main__":
